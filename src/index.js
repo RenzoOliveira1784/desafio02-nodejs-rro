@@ -15,26 +15,31 @@ function checksExistsUserAccount(request, response, next) {
   if (!user) {
     return response.status(404).json({ error: "User not found"});
   }
-  user.request = user;
+  request.username = username;
+  request.user = user;
   return next();
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
   const { user } = request;
 
-  const size = user.todos.lenght;
-  console.log(size);
+  const size = user.todos.length;
   
   if ((user.pro === false && size < 10) || user.pro === true) {
     return next();
   }
 
-  return response.status(401).json({ error: "Erro de disponiblilidade(plano pro ou n)"});
+  return response.status(403).json({ error: "Erro de disponiblilidade(plano pro ou n)"});
 }
 
 function checksTodoExists(request, response, next) {
   const { username } = request.headers;
   const { id } = request.params;
+
+  
+  if (!validate(id)) {
+    return response.status(400).json({ error: "Invalid uuid"});
+  }
 
   const user = users.find(user => user.username === username);
   if (!user) {
@@ -44,9 +49,10 @@ function checksTodoExists(request, response, next) {
   if (!todo) {
     return response.status(404).json({ error: "Todo id not found in todos of this user"});
   }
-
-  todo.request = todo;
-  user.request = user;
+  
+  request.todo = todo;
+  request.user = user;
+  
 
   return next();
 }
@@ -62,6 +68,9 @@ function findUserById(request, response, next) {
   request.user = user;
   return next();
 }
+
+
+
 
 app.post('/users', (request, response) => {
   const { name, username } = request.body;
